@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Attendance System</title>
+<style>
+  :root {
+    --navy: #1a2744;
+    --navy-light: #2c3e5e;
+    --accent: #d97706;
+    --accent-light: #fef3c7;
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --border: #e5e5e0;
+    --text: #1f2937;
+    --text-muted: #6b7280;
+    --green: #15803d;
+    --green-bg: #dcfce7;
+    --red: #b91c1c;
+    --red-bg: #fee2e2;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: var(--navy);
+    color: white;
+    padding: 20px 16px;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  header p {
+    margin: 4px 0 0;
+    font-size: 0.8rem;
+    opacity: 0.75;
+  }
+  nav {
+    display: flex;
+    background: var(--navy-light);
+    overflow-x: auto;
+  }
+  nav button {
+    flex: 1;
+    min-width: 110px;
+    padding: 12px 8px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  nav button.active {
+    color: white;
+    border-bottom-color: var(--accent);
+    background: rgba(255,255,255,0.05);
+  }
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 1.05rem;
+    color: var(--navy);
+  }
+  label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 10px 0 4px;
+  }
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    background: #fff;
+  }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  button.primary {
+    margin-top: 16px;
+    width: 100%;
+    padding: 12px;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.primary:hover { background: var(--navy-light); }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .student-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .student-row:last-child { border-bottom: none; }
+  .student-name { font-weight: 600; }
+  .student-meta { font-size: 0.78rem; color: var(--text-muted); }
+  .del-btn {
+    background: none;
+    border: none;
+    color: var(--red);
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  .attend-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .attend-row:last-child { border-bottom: none; }
+  .toggle-group { display: flex; gap: 6px; }
+  .toggle-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text-muted);
+  }
+  .toggle-btn.present.active { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+  .toggle-btn.absent.active { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+
+  .empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding: 24px 0;
+  }
+  .record-card { margin-bottom: 10px; }
+  .record-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .record-head strong { color: var(--navy); }
+  .record-summary { font-size: 0.78rem; color: var(--text-muted); }
+  .record-body { margin-top: 10px; display: none; }
+  .record-body.open { display: block; }
+  .record-line { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.85rem; }
+  .status-pill { padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 700; }
+  .status-pill.present { background: var(--green-bg); color: var(--green); }
+  .status-pill.absent { background: var(--red-bg); color: var(--red); }
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--navy);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+  .note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: -6px;
+    margin-bottom: 10px;
+  }
+  .stat-row { display: flex; gap: 10px; margin-bottom: 4px; }
+  .stat {
+    flex: 1;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .stat .num { font-size: 1.3rem; font-weight: 700; color: var(--navy); }
+  .stat .lbl { font-size: 0.72rem; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📋 Student Attendance System</h1>
+  <p>Register students &amp; track daily attendance</p>
+</header>
+
+<nav>
+  <button class="tab-btn active" data-tab="register">Register</button>
+  <button class="tab-btn" data-tab="students">Students</button>
+  <button class="tab-btn" data-tab="attendance">Take Attendance</button>
+  <button class="tab-btn" data-tab="records">Records</button>
+</nav>
+
+<main>
+
+  <!-- REGISTER TAB -->
+  <div class="tab-panel" id="tab-register">
+    <div class="card">
+      <h2>Register New Student</h2>
+      <label>Full Name</label>
+      <input type="text" id="reg-name" placeholder="e.g. Patel Dharmi Jayarambhai">
+
+      <label>Enrollment Number</label>
+      <input type="text" id="reg-enroll" placeholder="e.g. 250160111017">
+
+      <label>Branch</label>
+      <select id="reg-branch">
+        <option value="">Select branch</option>
+        <option>Electronics & Communication (EC)</option>
+        <option>Computer Engineering (CE)</option>
+        <option>Information Technology (IT)</option>
+        <option>Mechanical Engineering (ME)</option>
+        <option>Civil Engineering (CE-Civil)</option>
+        <option>Electrical Engineering (EE)</option>
+        <option value="__other">Other (type below)</option>
+      </select>
+      <input type="text" id="reg-branch-other" placeholder="Enter branch name" style="display:none; margin-top:8px;">
+
+      <label>Semester</label>
+      <select id="reg-sem">
+        <option value="">Select semester</option>
+        <option>1</option><option>2</option><option>3</option><option>4</option>
+        <option>5</option><option>6</option><option>7</option><option>8</option>
+      </select>
+
+      <button class="primary" id="btn-register">Register Student</button>
+    </div>
+  </div>
+
+  <!-- STUDENTS TAB -->
+  <div class="tab-panel" id="tab-students" style="display:none;">
+    <div class="card">
+      <h2>Registered Students</h2>
+      <div id="students-list"><div class="empty">No students registered yet.</div></div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE TAB -->
+  <div class="tab-panel" id="tab-attendance" style="display:none;">
+    <div class="card">
+      <h2>Take Attendance</h2>
+      <label>Date</label>
+      <input type="date" id="att-date">
+      <div id="att-list" style="margin-top:14px;"><div class="empty">Register students first.</div></div>
+      <button class="primary" id="btn-save-attendance" style="display:none;">Save Attendance</button>
+    </div>
+  </div>
+
+  <!-- RECORDS TAB -->
+  <div class="tab-panel" id="tab-records" style="display:none;">
+    <div class="card">
+      <h2>Attendance Records</h2>
+      <div id="records-list"><div class="empty">No attendance taken yet.</div></div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let students = [];
+let attendanceRecords = {}; // date -> {enroll: 'present'/'absent'}
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ---------- STORAGE ----------
+async function loadData() {
+  try {
+    const s = await window.storage.get('students', true);
+    students = s ? JSON.parse(s.value) : [];
+  } catch (e) { students = []; }
+  try {
+    const a = await window.storage.get('attendance-records', true);
+    attendanceRecords = a ? JSON.parse(a.value) : {};
+  } catch (e) { attendanceRecords = {}; }
+  renderStudents();
+  renderAttendanceForm();
+  renderRecords();
+}
+
+async function saveStudents() {
+  try {
+    await window.storage.set('students', JSON.stringify(students), true);
+  } catch (e) {
+    showToast('Error saving student data');
+  }
+}
+
+async function saveAttendanceRecords() {
+  try {
+    await window.storage.set('attendance-records', JSON.stringify(attendanceRecords), true);
+  } catch (e) {
+    showToast('Error saving attendance');
+  }
+}
+
+// ---------- TABS ----------
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    $('tab-' + btn.dataset.tab).style.display = 'block';
+    if (btn.dataset.tab === 'attendance') renderAttendanceForm();
+    if (btn.dataset.tab === 'records') renderRecords();
+  });
+});
+
+// ---------- REGISTER ----------
+$('reg-branch').addEventListener('change', (e) => {
+  $('reg-branch-other').style.display = e.target.value === '__other' ? 'block' : 'none';
+});
+
+$('btn-register').addEventListener('click', async () => {
+  const name = $('reg-name').value.trim();
+  const enroll = $('reg-enroll').value.trim();
+  let branch = $('reg-branch').value;
+  if (branch === '__other') branch = $('reg-branch-other').value.trim();
+  const sem = $('reg-sem').value;
+
+  if (!name || !enroll || !branch || !sem) {
+    showToast('Please fill in all fields');
+    return;
+  }
+  if (students.some(s => s.enroll === enroll)) {
+    showToast('This enrollment number is already registered');
+    return;
+  }
+
+  students.push({ name, enroll, branch, sem });
+  await saveStudents();
+  renderStudents();
+
+  $('reg-name').value = '';
+  $('reg-enroll').value = '';
+  $('reg-branch').value = '';
+  $('reg-branch-other').value = '';
+  $('reg-branch-other').style.display = 'none';
+  $('reg-sem').value = '';
+  showToast('Student registered ✓');
+});
+
+// ---------- STUDENTS LIST ----------
+function renderStudents() {
+  const el = $('students-list');
+  if (students.length === 0) {
+    el.innerHTML = '<div class="empty">No students registered yet.</div>';
+    return;
+  }
+  el.innerHTML = students.map(s => `
+    <div class="student-row">
+      <div>
+        <div class="student-name">${escapeHtml(s.name)}</div>
+        <div class="student-meta">${escapeHtml(s.enroll)} · ${escapeHtml(s.branch)} · Sem ${escapeHtml(s.sem)}</div>
+      </div>
+      <button class="del-btn" data-enroll="${escapeHtml(s.enroll)}">Remove</button>
+    </div>
+  `).join('');
+  el.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      students = students.filter(s => s.enroll !== btn.dataset.enroll);
+      await saveStudents();
+      renderStudents();
+      renderAttendanceForm();
+      showToast('Student removed');
+    });
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---------- ATTENDANCE ----------
+if (!$('att-date').value) {
+  const today = new Date().toISOString().split('T')[0];
+  $('att-date').value = today;
+}
+
+$('att-date').addEventListener('change', renderAttendanceForm);
+
+let currentAttendance = {};
+
+function renderAttendanceForm() {
+  const el = $('att-list');
+  const saveBtn = $('btn-save-attendance');
+  if (students.length === 0) {
+    el.innerHTML = '<div class="empty">Register students first.</div>';
+    saveBtn.style.display = 'none';
+    return;
+  }
+  const date = $('att-date').value;
+  const existing = attendanceRecords[date] || {};
+  currentAttendance = { ...existing };
+
+  el.innerHTML = students.map(s => `
+    <div class="attend-row" data-enroll="${escapeHtml(s.enroll)}">
+      <div>
+        <div class="student-name" style="font-size:0.9rem;">${escapeHtml(s.name)}</div>
+        <div class="student-meta">${escapeHtml(s.enroll)}</div>
+      </div>
+      <div class="toggle-group">
+        <button class="toggle-btn present ${currentAttendance[s.enroll]==='present'?'active':''}" data-status="present">Present</button>
+        <button class="toggle-btn absent ${currentAttendance[s.enroll]==='absent'?'active':''}" data-status="absent">Absent</button>
+      </div>
+    </div>
+  `).join('');
+
+  el.querySelectorAll('.attend-row').forEach(row => {
+    const enroll = row.dataset.enroll;
+    row.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentAttendance[enroll] = btn.dataset.status;
+        row.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+
+  saveBtn.style.display = 'block';
+}
+
+$('btn-save-attendance').addEventListener('click', async () => {
+  const date = $('att-date').value;
+  if (!date) { showToast('Please select a date'); return; }
+  const marked = Object.keys(currentAttendance).length;
+  if (marked === 0) { showToast('Mark at least one student'); return; }
+  attendanceRecords[date] = { ...currentAttendance };
+  await saveAttendanceRecords();
+  showToast('Attendance saved for ' + date);
+  renderRecords();
+});
+
+// ---------- RECORDS ----------
+function renderRecords() {
+  const el = $('records-list');
+  const dates = Object.keys(attendanceRecords).sort((a,b) => b.localeCompare(a));
+  if (dates.length === 0) {
+    el.innerHTML = '<div class="empty">No attendance taken yet.</div>';
+    return;
+  }
+  el.innerHTML = dates.map(date => {
+    const rec = attendanceRecords[date];
+    const total = Object.keys(rec).length;
+    const present = Object.values(rec).filter(v => v === 'present').length;
+    const rows = Object.entries(rec).map(([enroll, status]) => {
+      const stu = students.find(s => s.enroll === enroll);
+      const label = stu ? stu.name : enroll;
+      return `<div class="record-line"><span>${escapeHtml(label)} (${escapeHtml(enroll)})</span><span class="status-pill ${status}">${status}</span></div>`;
+    }).join('');
+    return `
+      <div class="record-card">
+        <div class="record-head" data-date="${date}">
+          <strong>${date}</strong>
+          <span class="record-summary">${present}/${total} present ▾</span>
+        </div>
+        <div class="record-body" id="body-${date}">
+          <div class="stat-row">
+            <div class="stat"><div class="num">${present}</div><div class="lbl">Present</div></div>
+            <div class="stat"><div class="num">${total-present}</div><div class="lbl">Absent</div></div>
+          </div>
+          ${rows}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  el.querySelectorAll('.record-head').forEach(head => {
+    head.addEventListener('click', () => {
+      $('body-' + head.dataset.date).classList.toggle('open');
+    });
+  });
+}
+
+loadData();
+</script>
+
+</body>
+</html>
